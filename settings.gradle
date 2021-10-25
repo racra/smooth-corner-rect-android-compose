@@ -8,3 +8,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "Smooth corner rect demo app"
 include ':app'
+include ':Smooth-corner-rect-library'
