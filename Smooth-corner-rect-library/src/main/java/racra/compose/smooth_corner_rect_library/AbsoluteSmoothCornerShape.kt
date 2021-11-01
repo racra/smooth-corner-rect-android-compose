@@ -23,7 +23,7 @@ import kotlin.math.*
  * @param cornerRadius the size of the corners
  * @param smoothnessAsPercent a percentage representing how smooth the corners will be
  */
-class AbsoluteSmoothCornerShape(
+data class AbsoluteSmoothCornerShape(
     private val cornerRadius: Dp = 0.dp,
     private val smoothnessAsPercent: Int = 60
 ) : CornerBasedShape(
@@ -66,176 +66,163 @@ class AbsoluteSmoothCornerShape(
             Outline.Generic(
                 Path().apply {
                     val shortestSide = min(size.height, size.width)
-
-                    val radius = min(topStart, shortestSide / 2)
-
-                    // Distance from the first point of the curvature to the vertex of the corner
-                    val curveStartDistance = min(shortestSide / 2, (1 + smoothness) * radius)
-
-                    // Angle at second control point of the bezier curves
-                    val angleAlpha: Float
-                    // Angle which dictates how much of the curve is going to be a slice of a circle
-                    val angleBeta: Float
-
-                    if (radius <= shortestSide / 4) {
-                        angleAlpha = toRadians(45.0 * smoothness).toFloat()
-                        angleBeta = toRadians(90.0 * (1.0 - smoothness)).toFloat()
-                    } else {
-                        // This value is used to start interpolating between smooth corners and
-                        // round corners
-                        val interpolationMultiplier =
-                            (radius - shortestSide / 4) / (shortestSide / 4)
-
-                        angleAlpha = toRadians(
-                            45.0 * smoothness * (1 - interpolationMultiplier)
-                        ).toFloat()
-                        angleBeta = toRadians(
-                            90.0 * (1 - smoothness * (1 - interpolationMultiplier))
-                        ).toFloat()
-                    }
-
-                    val angleTheta = ((toRadians(90.0) - angleBeta) / 2.0).toFloat()
-
-                    // Distance from second control point to end of Bezier curves
-                    val distanceE = radius * tan(angleTheta / 2)
-
-                    // Distances in the x and y axis used to position end of Bezier
-                    // curves relative to it's second control point
-                    val distanceC = distanceE * cos(angleAlpha)
-                    val distanceD = distanceC * tan(angleAlpha)
-
-                    // Distances used to position second control point of Bezier curves
-                    // relative to their first control point
-                    val distanceK = sin(angleBeta / 2) * radius
-                    val distanceL = (distanceK * sqrt(2.0)).toFloat()
-                    val distanceB =
-                        ((curveStartDistance - distanceL) - (1 + tan(angleAlpha)) * distanceC) / 3
-
-                    // Distance used to position first control point of Bezier curves
-                    // relative to their origin
-                    val distanceA = 2 * distanceB
+                    val smoothCorner = SmoothCorner(
+                        topStart,
+                        smoothnessAsPercent,
+                        shortestSide / 2
+                    )
 
                     // Top Left Corner
-                    moveTo(0f, min(curveStartDistance, shortestSide / 2))
+                    moveTo(
+                        smoothCorner.anchorPoint1.distanceToClosestSide,
+                        smoothCorner.anchorPoint1.distanceToFurthestSide
+                    )
 
                     cubicTo(
-                        0f, curveStartDistance - distanceA,
-                        0f, curveStartDistance - distanceA - distanceB,
-                        distanceD, curveStartDistance - distanceA - distanceB - distanceC
+                        smoothCorner.controlPoint1.distanceToClosestSide,
+                        smoothCorner.controlPoint1.distanceToFurthestSide,
+                        smoothCorner.controlPoint2.distanceToClosestSide,
+                        smoothCorner.controlPoint2.distanceToFurthestSide,
+                        smoothCorner.anchorPoint2.distanceToClosestSide,
+                        smoothCorner.anchorPoint2.distanceToFurthestSide
                     )
 
                     arcToRad(
                         rect = Rect(
                             top = 0f,
                             left = 0f,
-                            right = radius * 2,
-                            bottom = radius * 2
+                            right = smoothCorner.arcSection.radius * 2,
+                            bottom = smoothCorner.arcSection.radius * 2
                         ),
-                        startAngleRadians = (toRadians(180.0) + angleTheta).toFloat(),
-                        sweepAngleRadians = angleBeta,
+                        startAngleRadians =
+                            (toRadians(180.0) + smoothCorner.arcSection.arcStartAngle)
+                                .toFloat(),
+                        sweepAngleRadians = smoothCorner.arcSection.arcSweepAngle,
                         forceMoveTo = false
                     )
 
                     cubicTo(
-                        curveStartDistance - distanceA - distanceB, 0f,
-                        curveStartDistance - distanceA, 0f,
-                        min(curveStartDistance, shortestSide / 2), 0f
+                        smoothCorner.controlPoint2.distanceToFurthestSide,
+                        smoothCorner.controlPoint2.distanceToClosestSide,
+                        smoothCorner.controlPoint1.distanceToFurthestSide,
+                        smoothCorner.controlPoint1.distanceToClosestSide,
+                        smoothCorner.anchorPoint1.distanceToFurthestSide,
+                        smoothCorner.anchorPoint1.distanceToClosestSide
                     )
 
-                    lineTo(max(size.width - curveStartDistance, shortestSide / 2), 0f)
+                    lineTo(
+                        size.width - smoothCorner.anchorPoint1.distanceToFurthestSide,
+                        smoothCorner.anchorPoint1.distanceToClosestSide
+                    )
 
                     // Top Right Corner
                     cubicTo(
-                        size.width - curveStartDistance + distanceA, 0f,
-                        size.width - curveStartDistance + distanceA + distanceB, 0f,
-                        size.width - curveStartDistance + distanceA + distanceB + distanceC,
-                        distanceD
-                    )
+                        size.width - smoothCorner.controlPoint1.distanceToFurthestSide,
+                        smoothCorner.controlPoint1.distanceToClosestSide,
+                        size.width - smoothCorner.controlPoint2.distanceToFurthestSide,
+                        smoothCorner.controlPoint2.distanceToClosestSide,
+                        size.width - smoothCorner.anchorPoint2.distanceToFurthestSide,
+                        smoothCorner.anchorPoint2.distanceToClosestSide,
+                   )
 
                     arcToRad(
                         rect = Rect(
                             top = 0f,
-                            left = size.width - radius * 2,
+                            left = size.width - smoothCorner.arcSection.radius * 2,
                             right = size.width,
-                            bottom = radius * 2
+                            bottom = smoothCorner.arcSection.radius * 2
                         ),
-                        startAngleRadians = (toRadians(270.0) + angleTheta).toFloat(),
-                        sweepAngleRadians = angleBeta,
+                        startAngleRadians =
+                            (toRadians(270.0) + smoothCorner.arcSection.arcStartAngle)
+                                .toFloat(),
+                        sweepAngleRadians = smoothCorner.arcSection.arcSweepAngle,
                         forceMoveTo = false
                     )
 
                     cubicTo(
-                        size.width, curveStartDistance - distanceA - distanceB,
-                        size.width, curveStartDistance - distanceA,
-                        size.width, min(curveStartDistance, shortestSide / 2)
+                        size.width - smoothCorner.controlPoint2.distanceToClosestSide,
+                        smoothCorner.controlPoint2.distanceToFurthestSide,
+                        size.width - smoothCorner.controlPoint1.distanceToClosestSide,
+                        smoothCorner.controlPoint1.distanceToFurthestSide,
+                        size.width - smoothCorner.anchorPoint1.distanceToClosestSide,
+                        smoothCorner.anchorPoint1.distanceToFurthestSide,
                     )
 
+
                     lineTo(
-                        size.width, max(size.height - curveStartDistance, shortestSide / 2)
+                        size.width - smoothCorner.anchorPoint1.distanceToClosestSide,
+                        size.height - smoothCorner.anchorPoint1.distanceToFurthestSide
                     )
 
                     // Bottom Right Corner
                     cubicTo(
-                        size.width,
-                        size.height - curveStartDistance + distanceA,
-                        size.width,
-                        size.height - curveStartDistance + distanceA + distanceB,
-                        size.width - distanceD,
-                        size.height - curveStartDistance + distanceA + distanceB + distanceC,
+                        size.width - smoothCorner.controlPoint1.distanceToClosestSide,
+                        size.height - smoothCorner.controlPoint1.distanceToFurthestSide,
+                        size.width - smoothCorner.controlPoint2.distanceToClosestSide,
+                        size.height - smoothCorner.controlPoint2.distanceToFurthestSide,
+                        size.width - smoothCorner.anchorPoint2.distanceToClosestSide,
+                        size.height - smoothCorner.anchorPoint2.distanceToFurthestSide
                     )
 
                     arcToRad(
                         rect = Rect(
-                            top = size.height - radius * 2,
-                            left = size.width - radius * 2,
+                            top = size.height - smoothCorner.arcSection.radius * 2,
+                            left = size.width - smoothCorner.arcSection.radius * 2,
                             right = size.width,
                             bottom = size.height
                         ),
-                        startAngleRadians = (toRadians(0.0) + angleTheta).toFloat(),
-                        sweepAngleRadians = angleBeta,
+                        startAngleRadians =
+                            (toRadians(0.0) + smoothCorner.arcSection.arcStartAngle)
+                                .toFloat(),
+                        sweepAngleRadians = smoothCorner.arcSection.arcSweepAngle,
                         forceMoveTo = false
                     )
 
                     cubicTo(
-                        size.width - curveStartDistance + distanceA + distanceB,
-                        size.height,
-                        size.width - curveStartDistance + distanceA,
-                        size.height,
-                        max(size.width - curveStartDistance, shortestSide / 2),
-                        size.height,
+                        size.width - smoothCorner.controlPoint2.distanceToFurthestSide,
+                        size.height - smoothCorner.controlPoint2.distanceToClosestSide,
+                        size.width - smoothCorner.controlPoint1.distanceToFurthestSide,
+                        size.height - smoothCorner.controlPoint1.distanceToClosestSide,
+                        size.width - smoothCorner.anchorPoint1.distanceToFurthestSide,
+                        size.height - smoothCorner.anchorPoint1.distanceToClosestSide
                     )
 
-                    lineTo(max(curveStartDistance, shortestSide / 2), size.height)
+                    lineTo(
+                        smoothCorner.anchorPoint1.distanceToFurthestSide,
+                        size.height - smoothCorner.anchorPoint1.distanceToClosestSide
+                    )
 
                     // Bottom Left Corner
                     cubicTo(
-                        curveStartDistance - distanceA,
-                        size.height,
-                        curveStartDistance - distanceA - distanceB,
-                        size.height,
-                        curveStartDistance - distanceA - distanceB - distanceC,
-                        size.height - distanceD,
+                        smoothCorner.controlPoint1.distanceToFurthestSide,
+                        size.height - smoothCorner.controlPoint1.distanceToClosestSide,
+                        smoothCorner.controlPoint2.distanceToFurthestSide,
+                        size.height - smoothCorner.controlPoint2.distanceToClosestSide,
+                        smoothCorner.anchorPoint2.distanceToFurthestSide,
+                        size.height - smoothCorner.anchorPoint2.distanceToClosestSide,
                     )
 
                     arcToRad(
                         rect = Rect(
-                            top = size.height - radius * 2,
+                            top = size.height - smoothCorner.arcSection.radius * 2,
                             left = 0f,
-                            right = radius * 2,
+                            right = smoothCorner.arcSection.radius * 2,
                             bottom = size.height
                         ),
-                        startAngleRadians = (toRadians(90.0) + angleTheta).toFloat(),
-                        sweepAngleRadians = angleBeta,
+                        startAngleRadians =
+                            (toRadians(90.0) + smoothCorner.arcSection.arcStartAngle)
+                                .toFloat(),
+                        sweepAngleRadians = smoothCorner.arcSection.arcSweepAngle,
                         forceMoveTo = false
                     )
 
                     cubicTo(
-                        0f,
-                        size.height - curveStartDistance + distanceA + distanceB,
-                        0f,
-                        size.height - curveStartDistance + distanceA,
-                        0f,
-                        max(size.height - curveStartDistance, shortestSide / 2),
+                        smoothCorner.controlPoint2.distanceToClosestSide,
+                        size.height - smoothCorner.controlPoint2.distanceToFurthestSide,
+                        smoothCorner.controlPoint1.distanceToClosestSide,
+                        size.height - smoothCorner.controlPoint1.distanceToFurthestSide,
+                        smoothCorner.anchorPoint1.distanceToClosestSide,
+                        size.height - smoothCorner.anchorPoint1.distanceToFurthestSide
                     )
 
                     close()
@@ -252,3 +239,127 @@ class AbsoluteSmoothCornerShape(
         bottomStart: CornerSize
     ) = AbsoluteSmoothCornerShape(cornerRadius, smoothnessAsPercent)
 }
+
+/**
+ * A class representing the points required to draw the curves in a smooth corner.
+ * A smooth corner is made up of an arc surrounded by 2 diagonally symmetrical bezier curves.
+ * Documentation on the makeup of a smooth curve:
+ *
+ * @param cornerRadius the size of the corners
+ * @param smoothnessAsPercent a percentage representing how smooth the corners will be
+ * @param maximumCurveStartDistanceFromVertex the maximum height/width this curve can have
+ */
+private class SmoothCorner(
+    private val cornerRadius: Float,
+    private val smoothnessAsPercent: Int,
+    private val maximumCurveStartDistanceFromVertex: Float
+) {
+
+    init {
+        require(smoothnessAsPercent >= 0) {
+            "The value for smoothness can never be negative."
+        }
+    }
+
+    private val radius = min(cornerRadius, maximumCurveStartDistanceFromVertex)
+
+    private val smoothness = smoothnessAsPercent / 100f
+
+    // Distance from the first point of the curvature to the vertex of the corner
+    private val curveStartDistance =
+        min(maximumCurveStartDistanceFromVertex, (1 + smoothness) * radius)
+
+    private val shouldCurveInterpolate = radius <= maximumCurveStartDistanceFromVertex / 2
+
+    // This value is used to start interpolating between smooth corners and
+    // round corners
+    private val interpolationMultiplier =
+        (radius - maximumCurveStartDistanceFromVertex / 2) / (maximumCurveStartDistanceFromVertex / 2)
+
+    // Angle at second control point of the bezier curves
+    private val angleAlpha =
+        if (shouldCurveInterpolate)
+            toRadians(45.0 * smoothness).toFloat()
+        else
+            toRadians(45.0 * smoothness * (1 - interpolationMultiplier)).toFloat()
+
+    // Angle which dictates how much of the curve is going to be a slice of a circle
+    private val angleBeta =
+        if (shouldCurveInterpolate)
+            toRadians(90.0 * (1.0 - smoothness)).toFloat()
+        else
+            toRadians(90.0 * (1 - smoothness * (1 - interpolationMultiplier))).toFloat()
+
+    private val angleTheta = ((toRadians(90.0) - angleBeta) / 2.0).toFloat()
+
+    // Distance from second control point to end of Bezier curves
+    private val distanceE = radius * tan(angleTheta / 2)
+
+    // Distances in the x and y axis used to position end of Bezier
+    // curves relative to it's second control point
+    private val distanceC = distanceE * cos(angleAlpha)
+    private val distanceD = distanceC * tan(angleAlpha)
+
+    // Distances used to position second control point of Bezier curves
+    // relative to their first control point
+    private val distanceK = sin(angleBeta / 2) * radius
+    private val distanceL = (distanceK * sqrt(2.0)).toFloat()
+    private val distanceB =
+        ((curveStartDistance - distanceL) - (1 + tan(angleAlpha)) * distanceC) / 3
+
+    // Distance used to position first control point of Bezier curves
+    // relative to their origin
+    private val distanceA = 2 * distanceB
+
+    // Represents the outer anchor points of the smooth curve
+    val anchorPoint1 = PointRelativeToVertex(
+        min(curveStartDistance, maximumCurveStartDistanceFromVertex),
+        0f
+    )
+
+    // Represents the control point for point1
+    val controlPoint1 = PointRelativeToVertex(
+        anchorPoint1.distanceToFurthestSide - distanceA,
+        0f
+    )
+
+    // Represents the control point for point2
+    val controlPoint2 = PointRelativeToVertex(
+        controlPoint1.distanceToFurthestSide - distanceB,
+        0f
+    )
+
+    // Represents the inner anchor points of the smooth curve
+    val anchorPoint2 = PointRelativeToVertex(
+        controlPoint2.distanceToFurthestSide - distanceC,
+        distanceD
+    )
+
+    val arcSection = Arc(
+        radius = radius,
+        arcStartAngle = angleTheta,
+        arcSweepAngle = angleBeta
+    )
+}
+
+/**
+ * Represents a point positioned relative to a corner vertex, so that it can be used
+ * to calculate a smooth curve independently of which quadrant of the rectangle this
+ * curve will be inserted in.
+ */
+private data class PointRelativeToVertex(
+    val distanceToFurthestSide: Float,
+    val distanceToClosestSide: Float
+)
+
+/**
+ * Represents the arc section of a smooth corner curve
+ *
+ * @param arcStartAngle the start angle of the arc inside the first quadrant of rotation (0º to 90º)
+ * @param arcSweepAngle the angle at the center point between the start and end of the arc
+ */
+private data class Arc(
+    val radius: Float,
+    val arcStartAngle: Float,
+    val arcSweepAngle: Float
+)
