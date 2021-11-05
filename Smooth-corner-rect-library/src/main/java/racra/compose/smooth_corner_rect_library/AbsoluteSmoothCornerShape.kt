@@ -18,28 +18,30 @@ import kotlin.math.*
  * This shape will not automatically mirror the corners in [LayoutDirection.Rtl], use
  * TODO [SmoothCornerShape] for the layout direction aware version of this shape.
  *
- * TODO - Create support for different radius and smoothness for each corner
- *
- * @param cornerRadius the size of the corners
- * @param smoothnessAsPercent a percentage representing how smooth the corners will be
+ * @param cornerRadiusTL the size of the top left corner
+ * @param smoothnessAsPercentTL a percentage representing how smooth the top left corner will be
+ * @param cornerRadiusTR the size of the top right corner
+ * @param smoothnessAsPercentTR a percentage representing how smooth the top right corner will be
+ * @param cornerRadiusBR the size of the bottom right corner
+ * @param smoothnessAsPercentBR a percentage representing how smooth the bottom right corner will be
+ * @param cornerRadiusBL the size of the bottom left corner
+ * @param smoothnessAsPercentBL a percentage representing how smooth the bottom left corner will be
  */
 data class AbsoluteSmoothCornerShape(
-    private val cornerRadius: Dp = 0.dp,
-    private val smoothnessAsPercent: Int = 60
+    private val cornerRadiusTL: Dp = 0.dp,
+    private val smoothnessAsPercentTL: Int = 60,
+    private val cornerRadiusTR: Dp = 0.dp,
+    private val smoothnessAsPercentTR: Int = 60,
+    private val cornerRadiusBR: Dp = 0.dp,
+    private val smoothnessAsPercentBR: Int = 60,
+    private val cornerRadiusBL: Dp = 0.dp,
+    private val smoothnessAsPercentBL: Int = 60
 ) : CornerBasedShape(
-    topStart = CornerSize(cornerRadius),
-    topEnd = CornerSize(cornerRadius),
-    bottomEnd = CornerSize(cornerRadius),
-    bottomStart = CornerSize(cornerRadius)
+    topStart = CornerSize(cornerRadiusTL),
+    topEnd = CornerSize(cornerRadiusTR),
+    bottomEnd = CornerSize(cornerRadiusBR),
+    bottomStart = CornerSize(cornerRadiusBL)
 ) {
-    private val smoothness = smoothnessAsPercent / 100f
-
-    init {
-        require(smoothnessAsPercent >= 0) {
-            "The value for smoothness can never be negative."
-        }
-    }
-
     override fun createOutline(
         size: Size,
         topStart: Float,
@@ -51,7 +53,8 @@ data class AbsoluteSmoothCornerShape(
         topStart + topEnd + bottomEnd + bottomStart == 0.0f -> {
             Outline.Rectangle(size.toRect())
         }
-        smoothness == 0f -> {
+        smoothnessAsPercentTL + smoothnessAsPercentTR +
+                smoothnessAsPercentBR + smoothnessAsPercentBL == 0 -> {
             Outline.Rounded(
                 RoundRect(
                     rect = size.toRect(),
@@ -65,164 +68,187 @@ data class AbsoluteSmoothCornerShape(
         else -> {
             Outline.Generic(
                 Path().apply {
-                    val shortestSide = min(size.height, size.width)
-                    val smoothCorner = SmoothCorner(
-                        topStart,
-                        smoothnessAsPercent,
-                        shortestSide / 2
-                    )
+                    val halfOfShortestSide = min(size.height, size.width) / 2
+                    val smoothCornersMap = mutableMapOf<String, SmoothCorner>()
+
+                    var selectedSmoothCorner =
+                        smoothCornersMap["$topStart - $smoothnessAsPercentTL"] ?: SmoothCorner(
+                            topStart,
+                            smoothnessAsPercentTL,
+                            halfOfShortestSide
+                        )
 
                     // Top Left Corner
                     moveTo(
-                        smoothCorner.anchorPoint1.distanceToClosestSide,
-                        smoothCorner.anchorPoint1.distanceToFurthestSide
+                        selectedSmoothCorner.anchorPoint1.distanceToClosestSide,
+                        selectedSmoothCorner.anchorPoint1.distanceToFurthestSide
                     )
 
                     cubicTo(
-                        smoothCorner.controlPoint1.distanceToClosestSide,
-                        smoothCorner.controlPoint1.distanceToFurthestSide,
-                        smoothCorner.controlPoint2.distanceToClosestSide,
-                        smoothCorner.controlPoint2.distanceToFurthestSide,
-                        smoothCorner.anchorPoint2.distanceToClosestSide,
-                        smoothCorner.anchorPoint2.distanceToFurthestSide
+                        selectedSmoothCorner.controlPoint1.distanceToClosestSide,
+                        selectedSmoothCorner.controlPoint1.distanceToFurthestSide,
+                        selectedSmoothCorner.controlPoint2.distanceToClosestSide,
+                        selectedSmoothCorner.controlPoint2.distanceToFurthestSide,
+                        selectedSmoothCorner.anchorPoint2.distanceToClosestSide,
+                        selectedSmoothCorner.anchorPoint2.distanceToFurthestSide
                     )
 
                     arcToRad(
                         rect = Rect(
                             top = 0f,
                             left = 0f,
-                            right = smoothCorner.arcSection.radius * 2,
-                            bottom = smoothCorner.arcSection.radius * 2
+                            right = selectedSmoothCorner.arcSection.radius * 2,
+                            bottom = selectedSmoothCorner.arcSection.radius * 2
                         ),
                         startAngleRadians =
-                            (toRadians(180.0) + smoothCorner.arcSection.arcStartAngle)
-                                .toFloat(),
-                        sweepAngleRadians = smoothCorner.arcSection.arcSweepAngle,
+                        (toRadians(180.0) + selectedSmoothCorner.arcSection.arcStartAngle)
+                            .toFloat(),
+                        sweepAngleRadians = selectedSmoothCorner.arcSection.arcSweepAngle,
                         forceMoveTo = false
                     )
 
                     cubicTo(
-                        smoothCorner.controlPoint2.distanceToFurthestSide,
-                        smoothCorner.controlPoint2.distanceToClosestSide,
-                        smoothCorner.controlPoint1.distanceToFurthestSide,
-                        smoothCorner.controlPoint1.distanceToClosestSide,
-                        smoothCorner.anchorPoint1.distanceToFurthestSide,
-                        smoothCorner.anchorPoint1.distanceToClosestSide
+                        selectedSmoothCorner.controlPoint2.distanceToFurthestSide,
+                        selectedSmoothCorner.controlPoint2.distanceToClosestSide,
+                        selectedSmoothCorner.controlPoint1.distanceToFurthestSide,
+                        selectedSmoothCorner.controlPoint1.distanceToClosestSide,
+                        selectedSmoothCorner.anchorPoint1.distanceToFurthestSide,
+                        selectedSmoothCorner.anchorPoint1.distanceToClosestSide
                     )
 
+                    selectedSmoothCorner =
+                        smoothCornersMap["$topEnd - $smoothnessAsPercentTR"] ?: SmoothCorner(
+                            topEnd,
+                            smoothnessAsPercentTR,
+                            halfOfShortestSide
+                        )
+
                     lineTo(
-                        size.width - smoothCorner.anchorPoint1.distanceToFurthestSide,
-                        smoothCorner.anchorPoint1.distanceToClosestSide
+                        size.width - selectedSmoothCorner.anchorPoint1.distanceToFurthestSide,
+                        selectedSmoothCorner.anchorPoint1.distanceToClosestSide
                     )
 
                     // Top Right Corner
                     cubicTo(
-                        size.width - smoothCorner.controlPoint1.distanceToFurthestSide,
-                        smoothCorner.controlPoint1.distanceToClosestSide,
-                        size.width - smoothCorner.controlPoint2.distanceToFurthestSide,
-                        smoothCorner.controlPoint2.distanceToClosestSide,
-                        size.width - smoothCorner.anchorPoint2.distanceToFurthestSide,
-                        smoothCorner.anchorPoint2.distanceToClosestSide,
-                   )
+                        size.width - selectedSmoothCorner.controlPoint1.distanceToFurthestSide,
+                        selectedSmoothCorner.controlPoint1.distanceToClosestSide,
+                        size.width - selectedSmoothCorner.controlPoint2.distanceToFurthestSide,
+                        selectedSmoothCorner.controlPoint2.distanceToClosestSide,
+                        size.width - selectedSmoothCorner.anchorPoint2.distanceToFurthestSide,
+                        selectedSmoothCorner.anchorPoint2.distanceToClosestSide,
+                    )
 
                     arcToRad(
                         rect = Rect(
                             top = 0f,
-                            left = size.width - smoothCorner.arcSection.radius * 2,
+                            left = size.width - selectedSmoothCorner.arcSection.radius * 2,
                             right = size.width,
-                            bottom = smoothCorner.arcSection.radius * 2
+                            bottom = selectedSmoothCorner.arcSection.radius * 2
                         ),
                         startAngleRadians =
-                            (toRadians(270.0) + smoothCorner.arcSection.arcStartAngle)
-                                .toFloat(),
-                        sweepAngleRadians = smoothCorner.arcSection.arcSweepAngle,
+                        (toRadians(270.0) + selectedSmoothCorner.arcSection.arcStartAngle)
+                            .toFloat(),
+                        sweepAngleRadians = selectedSmoothCorner.arcSection.arcSweepAngle,
                         forceMoveTo = false
                     )
 
                     cubicTo(
-                        size.width - smoothCorner.controlPoint2.distanceToClosestSide,
-                        smoothCorner.controlPoint2.distanceToFurthestSide,
-                        size.width - smoothCorner.controlPoint1.distanceToClosestSide,
-                        smoothCorner.controlPoint1.distanceToFurthestSide,
-                        size.width - smoothCorner.anchorPoint1.distanceToClosestSide,
-                        smoothCorner.anchorPoint1.distanceToFurthestSide,
+                        size.width - selectedSmoothCorner.controlPoint2.distanceToClosestSide,
+                        selectedSmoothCorner.controlPoint2.distanceToFurthestSide,
+                        size.width - selectedSmoothCorner.controlPoint1.distanceToClosestSide,
+                        selectedSmoothCorner.controlPoint1.distanceToFurthestSide,
+                        size.width - selectedSmoothCorner.anchorPoint1.distanceToClosestSide,
+                        selectedSmoothCorner.anchorPoint1.distanceToFurthestSide,
                     )
 
+                    selectedSmoothCorner =
+                        smoothCornersMap["$bottomEnd - $smoothnessAsPercentBR"] ?: SmoothCorner(
+                            bottomEnd,
+                            smoothnessAsPercentBR,
+                            halfOfShortestSide
+                        )
 
                     lineTo(
-                        size.width - smoothCorner.anchorPoint1.distanceToClosestSide,
-                        size.height - smoothCorner.anchorPoint1.distanceToFurthestSide
+                        size.width - selectedSmoothCorner.anchorPoint1.distanceToClosestSide,
+                        size.height - selectedSmoothCorner.anchorPoint1.distanceToFurthestSide
                     )
 
                     // Bottom Right Corner
                     cubicTo(
-                        size.width - smoothCorner.controlPoint1.distanceToClosestSide,
-                        size.height - smoothCorner.controlPoint1.distanceToFurthestSide,
-                        size.width - smoothCorner.controlPoint2.distanceToClosestSide,
-                        size.height - smoothCorner.controlPoint2.distanceToFurthestSide,
-                        size.width - smoothCorner.anchorPoint2.distanceToClosestSide,
-                        size.height - smoothCorner.anchorPoint2.distanceToFurthestSide
+                        size.width - selectedSmoothCorner.controlPoint1.distanceToClosestSide,
+                        size.height - selectedSmoothCorner.controlPoint1.distanceToFurthestSide,
+                        size.width - selectedSmoothCorner.controlPoint2.distanceToClosestSide,
+                        size.height - selectedSmoothCorner.controlPoint2.distanceToFurthestSide,
+                        size.width - selectedSmoothCorner.anchorPoint2.distanceToClosestSide,
+                        size.height - selectedSmoothCorner.anchorPoint2.distanceToFurthestSide
                     )
 
                     arcToRad(
                         rect = Rect(
-                            top = size.height - smoothCorner.arcSection.radius * 2,
-                            left = size.width - smoothCorner.arcSection.radius * 2,
+                            top = size.height - selectedSmoothCorner.arcSection.radius * 2,
+                            left = size.width - selectedSmoothCorner.arcSection.radius * 2,
                             right = size.width,
                             bottom = size.height
                         ),
                         startAngleRadians =
-                            (toRadians(0.0) + smoothCorner.arcSection.arcStartAngle)
-                                .toFloat(),
-                        sweepAngleRadians = smoothCorner.arcSection.arcSweepAngle,
+                        (toRadians(0.0) + selectedSmoothCorner.arcSection.arcStartAngle)
+                            .toFloat(),
+                        sweepAngleRadians = selectedSmoothCorner.arcSection.arcSweepAngle,
                         forceMoveTo = false
                     )
 
                     cubicTo(
-                        size.width - smoothCorner.controlPoint2.distanceToFurthestSide,
-                        size.height - smoothCorner.controlPoint2.distanceToClosestSide,
-                        size.width - smoothCorner.controlPoint1.distanceToFurthestSide,
-                        size.height - smoothCorner.controlPoint1.distanceToClosestSide,
-                        size.width - smoothCorner.anchorPoint1.distanceToFurthestSide,
-                        size.height - smoothCorner.anchorPoint1.distanceToClosestSide
+                        size.width - selectedSmoothCorner.controlPoint2.distanceToFurthestSide,
+                        size.height - selectedSmoothCorner.controlPoint2.distanceToClosestSide,
+                        size.width - selectedSmoothCorner.controlPoint1.distanceToFurthestSide,
+                        size.height - selectedSmoothCorner.controlPoint1.distanceToClosestSide,
+                        size.width - selectedSmoothCorner.anchorPoint1.distanceToFurthestSide,
+                        size.height - selectedSmoothCorner.anchorPoint1.distanceToClosestSide
                     )
 
+                    selectedSmoothCorner =
+                        smoothCornersMap["$bottomStart - $smoothnessAsPercentBL"] ?: SmoothCorner(
+                            bottomStart,
+                            smoothnessAsPercentBL,
+                            halfOfShortestSide
+                        )
+
                     lineTo(
-                        smoothCorner.anchorPoint1.distanceToFurthestSide,
-                        size.height - smoothCorner.anchorPoint1.distanceToClosestSide
+                        selectedSmoothCorner.anchorPoint1.distanceToFurthestSide,
+                        size.height - selectedSmoothCorner.anchorPoint1.distanceToClosestSide
                     )
 
                     // Bottom Left Corner
                     cubicTo(
-                        smoothCorner.controlPoint1.distanceToFurthestSide,
-                        size.height - smoothCorner.controlPoint1.distanceToClosestSide,
-                        smoothCorner.controlPoint2.distanceToFurthestSide,
-                        size.height - smoothCorner.controlPoint2.distanceToClosestSide,
-                        smoothCorner.anchorPoint2.distanceToFurthestSide,
-                        size.height - smoothCorner.anchorPoint2.distanceToClosestSide,
+                        selectedSmoothCorner.controlPoint1.distanceToFurthestSide,
+                        size.height - selectedSmoothCorner.controlPoint1.distanceToClosestSide,
+                        selectedSmoothCorner.controlPoint2.distanceToFurthestSide,
+                        size.height - selectedSmoothCorner.controlPoint2.distanceToClosestSide,
+                        selectedSmoothCorner.anchorPoint2.distanceToFurthestSide,
+                        size.height - selectedSmoothCorner.anchorPoint2.distanceToClosestSide,
                     )
 
                     arcToRad(
                         rect = Rect(
-                            top = size.height - smoothCorner.arcSection.radius * 2,
+                            top = size.height - selectedSmoothCorner.arcSection.radius * 2,
                             left = 0f,
-                            right = smoothCorner.arcSection.radius * 2,
+                            right = selectedSmoothCorner.arcSection.radius * 2,
                             bottom = size.height
                         ),
                         startAngleRadians =
-                            (toRadians(90.0) + smoothCorner.arcSection.arcStartAngle)
-                                .toFloat(),
-                        sweepAngleRadians = smoothCorner.arcSection.arcSweepAngle,
+                        (toRadians(90.0) + selectedSmoothCorner.arcSection.arcStartAngle)
+                            .toFloat(),
+                        sweepAngleRadians = selectedSmoothCorner.arcSection.arcSweepAngle,
                         forceMoveTo = false
                     )
 
                     cubicTo(
-                        smoothCorner.controlPoint2.distanceToClosestSide,
-                        size.height - smoothCorner.controlPoint2.distanceToFurthestSide,
-                        smoothCorner.controlPoint1.distanceToClosestSide,
-                        size.height - smoothCorner.controlPoint1.distanceToFurthestSide,
-                        smoothCorner.anchorPoint1.distanceToClosestSide,
-                        size.height - smoothCorner.anchorPoint1.distanceToFurthestSide
+                        selectedSmoothCorner.controlPoint2.distanceToClosestSide,
+                        size.height - selectedSmoothCorner.controlPoint2.distanceToFurthestSide,
+                        selectedSmoothCorner.controlPoint1.distanceToClosestSide,
+                        size.height - selectedSmoothCorner.controlPoint1.distanceToFurthestSide,
+                        selectedSmoothCorner.anchorPoint1.distanceToClosestSide,
+                        size.height - selectedSmoothCorner.anchorPoint1.distanceToFurthestSide
                     )
 
                     close()
@@ -237,5 +263,33 @@ data class AbsoluteSmoothCornerShape(
         topEnd: CornerSize,
         bottomEnd: CornerSize,
         bottomStart: CornerSize
-    ) = AbsoluteSmoothCornerShape(cornerRadius, smoothnessAsPercent)
+    ) = AbsoluteSmoothCornerShape(
+        cornerRadiusTL,
+        smoothnessAsPercentTL,
+        cornerRadiusTR,
+        smoothnessAsPercentTR,
+        cornerRadiusBR,
+        smoothnessAsPercentBR,
+        cornerRadiusBL,
+        smoothnessAsPercentBL
+    )
 }
+
+/**
+ * Creates AbsoluteSmoothCornerShape with the same corner radius and smoothness applied for
+ * all four corners.
+ *
+ * @param cornerRadius the size of the corners for the shape
+ * @param smoothnessAsPercent a percentage representing how smooth the corners will be
+ */
+fun AbsoluteSmoothCornerShape(cornerRadius: Dp, smoothnessAsPercent: Int) =
+    AbsoluteSmoothCornerShape(
+        cornerRadiusTL = cornerRadius,
+        smoothnessAsPercentTL = smoothnessAsPercent,
+        cornerRadiusTR = cornerRadius,
+        smoothnessAsPercentTR = smoothnessAsPercent,
+        cornerRadiusBR = cornerRadius,
+        smoothnessAsPercentBR = smoothnessAsPercent,
+        cornerRadiusBL = cornerRadius,
+        smoothnessAsPercentBL = smoothnessAsPercent
+    )

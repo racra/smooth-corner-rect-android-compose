@@ -22,12 +22,12 @@ class AbsoluteSmoothCornerShapeAndroidTest {
         // path outcome. If future implementations call different path methods to implement the
         // shape then this test should be updated to use screenshot comparison.
         val inputToExpectedHashList = listOf(
-            InputToExpectedHash(Dp(10f), 10, 61009965),
-            InputToExpectedHash(Dp(10f), 50, 22817122),
-            InputToExpectedHash(Dp(10f), 100, 212183795),
-            InputToExpectedHash(Dp(50f), 10, 127009712),
-            InputToExpectedHash(Dp(50f), 50, 7037481),
-            InputToExpectedHash(Dp(50f), 100, 173504942),
+            InputToExpectedHash(Dp(10f), 10, 192685325),
+            InputToExpectedHash(Dp(10f), 50, 204729538),
+            InputToExpectedHash(Dp(10f), 100, 72030931),
+            InputToExpectedHash(Dp(50f), 10, 140043792),
+            InputToExpectedHash(Dp(50f), 50, 72549641),
+            InputToExpectedHash(Dp(50f), 100, 14160654),
         )
 
         for (item in inputToExpectedHashList) {
