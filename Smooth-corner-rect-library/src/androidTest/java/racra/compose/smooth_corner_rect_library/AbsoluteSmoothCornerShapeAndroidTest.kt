@@ -7,6 +7,10 @@ import androidx.compose.ui.unit.LayoutDirection
 import org.junit.Assert
 import org.junit.Test
 
+/**
+ * Note - These tests must be run on a device with API 30 using a different API version will cause
+ * tests to fail due to the Path API producing different hash codes.
+ */
 class AbsoluteSmoothCornerShapeAndroidTest {
 
     @Test
@@ -17,10 +21,12 @@ class AbsoluteSmoothCornerShapeAndroidTest {
             val expectedHashCode: Int
         )
 
-        // The expected hashcode values where generated when the shape was first implemented,
-        // they verify that future changes to the implementation do not deviate from the initial
-        // path outcome. If future implementations call different path methods to implement the
-        // shape then this test should be updated to use screenshot comparison.
+        /**
+         * The expected hashcode values where generated when the shape was first implemented,
+         * they verify that future changes to the implementation do not deviate from the initial
+         * path outcome. If future implementations call different path methods to implement the
+         * shape then this test should be updated to use screenshot comparison.
+         */
         val inputToExpectedHashList = listOf(
             InputToExpectedHash(Dp(10f), 10, 192685325),
             InputToExpectedHash(Dp(10f), 50, 204729538),
