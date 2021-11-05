@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import racra.compose.smooth_corner_rect_library.AbsoluteSmoothCornerShape
 import racra.compose.smoothcornerrectdemoapp.ui.theme.SmoothCornerRectDemoAppTheme
-import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,10 +31,28 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun DemoApp() {
-    var radius by remember {
+    var radiusTL by remember {
         mutableStateOf(50f)
     }
-    var smoothness by remember {
+    var radiusTR by remember {
+        mutableStateOf(50f)
+    }
+    var radiusBR by remember {
+        mutableStateOf(50f)
+    }
+    var radiusBL by remember {
+        mutableStateOf(50f)
+    }
+    var smoothnessTL by remember {
+        mutableStateOf(50f)
+    }
+    var smoothnessTR by remember {
+        mutableStateOf(50f)
+    }
+    var smoothnessBR by remember {
+        mutableStateOf(50f)
+    }
+    var smoothnessBL by remember {
         mutableStateOf(50f)
     }
 
@@ -43,8 +60,8 @@ fun DemoApp() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(60.dp, 0.dp)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .padding(60.dp, 0.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Surface(
@@ -61,18 +78,62 @@ fun DemoApp() {
                     .height(200.dp)
                     .width(200.dp),
                 color = Color(0xFFF6EABE),
-                shape = AbsoluteSmoothCornerShape(Dp(radius), smoothness.toInt())
+                shape = AbsoluteSmoothCornerShape(
+                    Dp(radiusTL), smoothnessTL.toInt(),
+                    Dp(radiusTR), smoothnessTR.toInt(),
+                    Dp(radiusBR), smoothnessBR.toInt(),
+                    Dp(radiusBL), smoothnessBL.toInt()
+                )
             ) {}
-            Text(text = "Radius: ${radius.toInt()}")
+            Text(text = "RadiusTL: ${radiusTL.toInt()}")
             Slider(
-                value = radius,
-                onValueChange = { radius = it },
+                value = radiusTL,
+                onValueChange = { radiusTL = it },
                 valueRange = 0f..100f
             )
-            Text(text = "Smoothness: ${smoothness.toInt()}")
+            Text(text = "SmoothnessTL: ${smoothnessTL.toInt()}")
             Slider(
-                value = smoothness,
-                onValueChange = { smoothness = it },
+                value = smoothnessTL,
+                onValueChange = { smoothnessTL = it },
+                valueRange = 0f..100f
+            )
+
+            Text(text = "RadiusTR: ${radiusTR.toInt()}")
+            Slider(
+                value = radiusTR,
+                onValueChange = { radiusTR = it },
+                valueRange = 0f..100f
+            )
+            Text(text = "SmoothnessTR: ${smoothnessTR.toInt()}")
+            Slider(
+                value = smoothnessTR,
+                onValueChange = { smoothnessTR = it },
+                valueRange = 0f..100f
+            )
+
+            Text(text = "RadiusBR: ${radiusBR.toInt()}")
+            Slider(
+                value = radiusBR,
+                onValueChange = { radiusBR = it },
+                valueRange = 0f..100f
+            )
+            Text(text = "SmoothnessBR: ${smoothnessBR.toInt()}")
+            Slider(
+                value = smoothnessBR,
+                onValueChange = { smoothnessBR = it },
+                valueRange = 0f..100f
+            )
+
+            Text(text = "RadiusBL: ${radiusBL.toInt()}")
+            Slider(
+                value = radiusBL,
+                onValueChange = { radiusBL = it },
+                valueRange = 0f..100f
+            )
+            Text(text = "SmoothnessBL: ${smoothnessBL.toInt()}")
+            Slider(
+                value = smoothnessBL,
+                onValueChange = { smoothnessBL = it },
                 valueRange = 0f..100f
             )
         }
