@@ -5,19 +5,10 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class AbsoluteSmoothCornerShapeTest {
-    @Test
-    fun shouldThrowExceptionWithNegativeSmoothness() {
-        assertThrows(IllegalArgumentException::class.java) {
-            AbsoluteSmoothCornerShape(50.dp, -50)
-        }
-    }
-
     @Test
     fun shouldProduceSamePathAsRoundedCornerShapeWhenSmoothnessIsZero() {
         for (radius in 0..100 step 10) {
