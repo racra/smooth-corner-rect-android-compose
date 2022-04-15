@@ -1,4 +1,5 @@
 <h1 align="center">Smooth Corner Rect Android Compose</h1>
+<p align="center"><img src="./assets/demo-app.gif" alt="Demo app gif"></p>
 <p align="center">An Android Jetpack Compose Library which implements true smooth rounded corner rectangles also known as Squircles/Superellipses with custumizable radius and smoothness values for each individual corner.</p>
 
 <p align="center">
