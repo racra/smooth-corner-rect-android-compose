@@ -5,9 +5,7 @@
 
 Shapes created by this library can be used in themes and regular composables, check out the [sample](/app) app for a working demo of the library.
 
-####
-
-Creating a Squircle shape
+#### Creating a Squircle shape
 
 // Todo - screenshot
 
