@@ -7,8 +7,6 @@ Shapes created by this library can be used in themes and regular composables, ch
 
 #### Creating a Squircle shape
 
-// Todo - screenshot
-
 ```kotlin
 Surface(
     modifier = Modifier
@@ -17,5 +15,22 @@ Surface(
         .width(200.dp),
     color = Color(0xFFF6EABE),
     shape = AbsoluteSmoothCornerShape(50.dp, 100)
+) {}
+```
+#### Creating a Squircle shape with individual corner radius and smoothenss values
+
+```kotlin
+Surface(
+    modifier = Modifier
+        .padding(25.dp)
+        .height(200.dp)
+        .width(200.dp),
+    color = Color(0xFFF6EABE),
+    shape = AbsoluteSmoothCornerShape(
+        100.dp, 100,
+        5.dp, 50,
+        100.dp, 100,
+        5.dp, 50,
+    )
 ) {}
 ```
