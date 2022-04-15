@@ -15,10 +15,35 @@
 
 ## Table of Contents
 
-1. [Usage](#usage)
+1. [How to add dependency](#how-to-add-dependency)
+2. [Usage](#usage)
     1. [Creating a Squircle shape](#creating-a-squircle-shape)
     2. [Creating a Squircle shape with individual corner radius and smoothenss values](#creating-a-squircle-shape-with-individual-corner-radius-and-smoothenss-values)
-2. [License](#license)
+3. [License](#license)
+
+---
+
+## How to add dependency
+
+[![](https://jitpack.io/v/racra/smooth-corner-rect-android-compose.svg)](https://jitpack.io/#racra/smooth-corner-rect-android-compose)
+
+Add the Jitpack repository to your root build.gradle file:
+
+```groovy
+allprojects {
+  repositories {
+    maven { url 'https://jitpack.io' }
+  }
+}
+```
+
+Also add the smooth-corner-rect-android-compose dependency to your app build.gradle:
+
+```groovy
+dependencies {
+  implementation 'com.github.racra:smooth-corner-rect-android-compose:v1.0.0'
+}
+```
 
 ---
 
