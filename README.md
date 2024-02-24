@@ -13,6 +13,14 @@
 
 ---
 
+## Support me
+
+I am proud to offer this resource for free, but if you wish to give some appreciation:
+
+<a href="https://www.buymeacoffee.com/racra" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+
+---
+
 ## Table of Contents
 
 1. [How to add dependency](#how-to-add-dependency)
